@@ -1,4 +1,5 @@
 use crate::cell::Cell;
+use std::marker::PhantomData;
 use std::ptr::NonNull;
 
 struct RcInner<T> {
@@ -8,6 +9,7 @@ struct RcInner<T> {
 
 pub struct Rc<T> {
     inner: NonNull<RcInner<T>>,
+    _marker: PhantomData<RcInner<T>>,
 }
 
 impl<T> Rc<T> {
@@ -19,6 +21,7 @@ impl<T> Rc<T> {
         Rc {
             // SAFETY: Box does not give us a null pointer
             inner: unsafe { NonNull::new_unchecked(Box::into_raw(inner)) },
+            _marker: PhantomData,
         }
     }
 }
@@ -37,7 +40,10 @@ impl<T> Clone for Rc<T> {
         let inner = unsafe { self.inner.as_ref() };
         let c = inner.refcount.get();
         inner.refcount.set(c + 1);
-        Rc { inner: self.inner }
+        Rc {
+            inner: self.inner,
+            _marker: PhantomData,
+        }
     }
 }
 
